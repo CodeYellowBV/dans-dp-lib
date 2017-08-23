@@ -64,7 +64,6 @@ public class DataPerfect
         try {
             database.open();
             database.getPanels().stream()
-                    .filter(panel -> panel.getFile().getName().equals("DOSSIER"))
                     .map(panel -> {
                         Table table =  DataPerfect.createTable(panel);
                         fillTable(table, panel);
@@ -173,9 +172,7 @@ public class DataPerfect
                 values.add(value);
             });
 
-            if (table.rows.size() < 50) {
-                table.rows.add(values);
-            }
+            table.rows.add(values);
         });
 
 
