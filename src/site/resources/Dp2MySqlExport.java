@@ -1,17 +1,18 @@
-/**
- * Copyright (C) 2009-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/*
+ * Copyright 2009-2010 Data Archiving and Networked Services (DANS), Netherlands.
+ * 
+ * This file is part of DANS DataPerfect Library.
+ * 
+ * DANS DataPerfect Library is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ * 
+ * DANS DataPerfect Library is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with DANS DataPerfect
+ * Library. If not, see <http://www.gnu.org/licenses/>.
  */
 import java.io.File;
 import java.io.FileWriter;
@@ -28,6 +29,7 @@ import nl.knaw.dans.common.dataperfect.Field;
 import nl.knaw.dans.common.dataperfect.Panel;
 import nl.knaw.dans.common.dataperfect.Record;
 import nl.knaw.dans.common.dataperfect.Type;
+import nl.knaw.dans.common.dataperfect.NoSuchRecordFieldException;
 
 /**
  * This program shows how you can use DANS DataPerfect Library. This program exports a DataPerfect
@@ -51,7 +53,7 @@ import nl.knaw.dans.common.dataperfect.Type;
  */
 public class Dp2MySqlExport
 {
-    public static void main(String[] args) throws IOException, DataPerfectLibException
+    public static void main(String[] args) throws IOException, DataPerfectLibException, NoSuchRecordFieldException
     {
         if (args.length < 2)
         {
@@ -59,7 +61,7 @@ public class Dp2MySqlExport
                     "Usage: Dp2MySqlExport <structure file> <output file>");
         }
 
-        final Database database = new Database(new File(args[0]));
+        final Database database = new Database(new File(args[0]) /*, "IBM437" (default) */);
         final File sqlScript = new File(args[1]);
         final PrintWriter writer = new PrintWriter(new FileWriter(sqlScript));
 
@@ -124,7 +126,7 @@ public class Dp2MySqlExport
     }
 
     private static void fillTable(final String tableName, final Panel panel,
-            final PrintWriter writer) throws IOException
+								  final PrintWriter writer) throws IOException, NoSuchRecordFieldException
     {
         final Iterator<Record> recordIterator = panel.recordIterator();
         final List<Field> fields = panel.getFields();
@@ -133,6 +135,7 @@ public class Dp2MySqlExport
         {
             Record record = recordIterator.next();
             String values = "";
+			String value;
 
             final Iterator<Field> fieldIterator = fields.iterator();
             while (fieldIterator.hasNext())
@@ -153,9 +156,12 @@ public class Dp2MySqlExport
                 }
                 else
                 {
-                    values +=
-                            "'" + escapeSingleQuotes(record.getValueAsString(field.getNumber()))
-                                    + "'";
+					value = record.getValueAsString(field.getNumber());
+					if (value == null) {
+						values += "null";
+					} else {
+						values += "'" + escapeSingleQuotes(value) + "'";
+					}
                 }
 
                 if (fieldIterator.hasNext())
@@ -192,7 +198,7 @@ public class Dp2MySqlExport
 
     private static String escapeSingleQuotes(final String string)
     {
-        return string.replaceAll("'", "\\'");
+        return string.replaceAll("'", "\\\\'");
     }
 }
 
@@ -205,11 +211,11 @@ class ColumnDefinition
     {
         if (field.getName() != null)
         {
-            name = field.getName();
+            name = "`" + field.getName() + "`";
         }
         else
         {
-            name = "" + field.getNumber();
+            name = "`" + field.getNumber() + "`";
         }
 
         if (field.getType() == Type.D)

@@ -45,7 +45,12 @@ final class NumberFormatter
 
         if (Long.toString(Math.abs(number)).length() > picture.digitsInMask())
         {
-            throw new IllegalArgumentException("Number of digits exceeds the mask size.");
+            return null;
+
+            // throw new IllegalArgumentException("Number of digits exceeds the mask size.  Got: "
+            //                                    + Long.toString(Math.abs(number)).length() + ", expected: "
+            //                                    + picture.digitsInMask() + " for value " + number + ", mask = "
+            //                                    + picture.mask);
         }
 
         final char[] result = new char[picture.getMaskSize()];

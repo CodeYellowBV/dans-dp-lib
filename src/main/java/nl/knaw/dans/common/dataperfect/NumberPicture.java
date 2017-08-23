@@ -44,7 +44,7 @@ class NumberPicture
     private Matcher matcher = null;
     private Type type = null;
     private String decimalThousandsSeparatorsFormat = null;
-    private String mask = null;
+    public String mask = null;
     private int dataLength;
 
     NumberPicture(final String numberPicture)

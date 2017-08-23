@@ -69,7 +69,7 @@ final class TimeFormatter
      */
     TimeFormatter(final String picture, final String defaultTimeOrder)
     {
-        super("(T)", "([HMS]{0,3})", "(:)", "([Z9]+)", picture, defaultTimeOrder);
+        super("(T)", "([HMS]{0,3})", "([:.])", "([Z9]+)", picture, defaultTimeOrder);
     }
 
     void setFields(final Object object, final int[] fields)

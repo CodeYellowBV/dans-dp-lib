@@ -71,13 +71,22 @@ final class TextFile
             /*
              * If it is not a special code, the start code is the length of the subblock.
              */
-            raFile.read(buffer, 0, subBlockStartByte);
+            try
+            {
+                long maxLen = endPosition - raFile.getFilePointer();
+                raFile.read(buffer,
+                            0,
+                            Math.min(subBlockStartByte, (int) maxLen));
 
-            final String bufferString = new String(buffer,
-                                                   0,
-                                                   subBlockStartByte,
-                                                   databaseSettings.getCharsetName());
-            stringBuilder.append(replaceNonPrintableCharacters(bufferString));
+                final String bufferString =
+                    new String(buffer, 0,
+                               Math.min(subBlockStartByte, (int) maxLen),
+                               databaseSettings.getCharsetName());
+                stringBuilder.append(replaceNonPrintableCharacters(bufferString));
+            }
+            catch (Exception e)
+            {
+            }
         }
 
         return stringBuilder.toString();
