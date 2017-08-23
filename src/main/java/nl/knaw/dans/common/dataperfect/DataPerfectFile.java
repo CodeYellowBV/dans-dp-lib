@@ -204,7 +204,7 @@ abstract class DataPerfectFile
         final byte b2 = raFile.readByte();
         final byte b3 = raFile.readByte();
 
-        return (0xFF & b3) * 0x000100 + (0xFF & b2) * 0x0100 + (0xFF & b1);
+        return (0xFF & b3) * 0x010000 + (0xFF & b2) * 0x0100 + (0xFF & b1);
     }
 
     void jumpToBlockAt(final int blockNumber)

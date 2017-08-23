@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2009-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,8 +24,7 @@ import java.io.IOException;
  * @author Jan van Mansum
  */
 final class TextFile
-    extends DataPerfectFile
-{
+        extends DataPerfectFile {
     private static final int OFFSET_LENGTH_DATA = 2;
     private static final int NEWLINE_CODE = 0xff;
 
@@ -34,59 +33,50 @@ final class TextFile
      */
     private static final int MARKUP_CODE = 0xfe;
 
-    TextFile(final File file, final DatabaseSettings databaseSettings)
-    {
+    TextFile(final File file, final DatabaseSettings databaseSettings) {
         super(file, databaseSettings);
     }
 
     String readTextAt(final int blockNumber)
-               throws IOException
-    {
+            throws IOException {
         jumpToBlockAt(blockNumber);
         skipBytes(OFFSET_LENGTH_DATA);
 
-        final int totalLength = readUnsignedShort();
+        int totalLength = readUnsignedShort();
+
+
+        assert(totalLength > 0);
+
         final long endPosition = totalLength + raFile.getFilePointer();
         final byte[] buffer = new byte[totalLength];
         final StringBuilder stringBuilder = new StringBuilder(totalLength);
 
-        while (raFile.getFilePointer() < endPosition)
-        {
-            int subBlockStartByte = 0xff & readByte();
 
-            while (subBlockStartByte == NEWLINE_CODE || subBlockStartByte == MARKUP_CODE)
-            {
-                if (subBlockStartByte == MARKUP_CODE)
-                {
+        while (raFile.getFilePointer() < endPosition) {
+
+            int subBlockStartByte =  readByte();
+
+            while (subBlockStartByte == NEWLINE_CODE || subBlockStartByte == MARKUP_CODE) {
+                if (subBlockStartByte == MARKUP_CODE) {
                     skipBytes(6);
-                }
-                else if (subBlockStartByte == NEWLINE_CODE)
-                {
+                } else if (subBlockStartByte == NEWLINE_CODE) {
                     stringBuilder.append('\n');
                 }
 
                 subBlockStartByte = readByte();
             }
 
+
+
             /*
              * If it is not a special code, the start code is the length of the subblock.
              */
-            try
-            {
-                long maxLen = endPosition - raFile.getFilePointer();
-                raFile.read(buffer,
-                            0,
-                            Math.min(subBlockStartByte, (int) maxLen));
-
-                final String bufferString =
-                    new String(buffer, 0,
-                               Math.min(subBlockStartByte, (int) maxLen),
-                               databaseSettings.getCharsetName());
-                stringBuilder.append(replaceNonPrintableCharacters(bufferString));
-            }
-            catch (Exception e)
-            {
-            }
+            raFile.read(buffer, 0, subBlockStartByte);
+            final String bufferString = new String(buffer,
+                    0,
+                    subBlockStartByte,
+                    databaseSettings.getCharsetName());
+            stringBuilder.append(replaceNonPrintableCharacters(bufferString));
         }
 
         return stringBuilder.toString();
