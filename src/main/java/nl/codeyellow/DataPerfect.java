@@ -20,7 +20,6 @@ import nl.knaw.dans.common.dataperfect.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
@@ -68,7 +67,10 @@ public class DataPerfect
                         Table table =  DataPerfect.createTable(panel);
                         fillTable(table, panel);
                         return table;
-                    }).forEach(table -> table.save(args[1]));
+                    }).forEach(table -> {
+                        // Only save non empty table
+                        table.save(args[1]);
+                    });
         } finally {
             database.close();
         }
@@ -119,9 +121,6 @@ public class DataPerfect
 
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-
-
             }
         }
 
@@ -135,7 +134,13 @@ public class DataPerfect
 
 
         panel.getFields().stream()
-                .map(field -> field.getName())
+                .map(field -> {
+                    if (field.getName() != null) {
+                        return field.getName();
+                    } else {
+                        return ""+field.getNumber();
+                    }
+                })
                 .forEach(fieldname -> table.addColumn(fieldname));
 
         return table;
@@ -194,15 +199,10 @@ public class DataPerfect
     private static String getDate(final int numberOfDaysSinceDPDateOffset)
     {
         final Calendar calendar = Calendar.getInstance();
-        calendar.set(1900, Calendar.JANUARY, 1);
+        calendar.set(1900, Calendar.MARCH, 1);
         calendar.add(Calendar.DAY_OF_MONTH, numberOfDaysSinceDPDateOffset);
 
         return calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-"
                 + calendar.get(Calendar.DAY_OF_MONTH);
-    }
-
-    private static String escapeSingleQuotes(final String string)
-    {
-        return string.replaceAll("'", "\\\\'");
     }
 }
